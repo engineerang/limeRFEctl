@@ -1,0 +1,104 @@
+<!-- 
+     Copyright 2023 Engineerang <engineerang@jpodtech.com>
+     SPDX-License-Identifier: Apache-2.0 
+-->
+
+<form class="form-inline" method="POST" action="/">
+
+    <div>
+        <label>Dev</label>
+        <input type="submit" value="Open" name="action1"/>
+        <input type="submit" value="Close" name="action2"/>
+        <input type="submit" value="To GUI" name="action3"/>
+    </div>
+    
+    <div>
+        <label>Rx Channel</label>
+        <select name="channel" id="cat1" onchange="loadcat(2)"></select>
+    
+        <label>Band</label>
+        <select name="band" id="cat2"></select>
+    </div>
+
+    <div>
+        <label>Rx Port</label>
+        <select name="port">
+            {% for c in portList %}
+                {% if c.selected == 'true' %}
+                    <option value={{c.id}} selected="selected">{{c.name}}</option>
+                {% else %}
+                    <option value={{c.id}}>{{c.name}}</option>                 
+                {% endif %}
+            {% endfor %}
+         </select>
+
+        <label>Attn</label>
+        <select name="attn">
+            {% for c in attnList %}
+                {% if c.selected == 'true' %}
+                    <option value={{c.id}} selected="selected">{{c.name}}</option>
+                {% else %}
+                    <option value={{c.id}}>{{c.name}}</option>                 
+                {% endif %}
+            {% endfor %}
+        </select>
+        
+        <label>Notch filter</label>
+        {% if notch[0].selected == 'true' %}
+            <input type="checkbox" name="notch" value="1" checked>
+        {% else %}
+            <input type="checkbox" name="notch" value="1" unchecked>                 
+        {% endif %}
+        
+    </div>
+    <div>
+        <label>Note: only Rx configuration supported.</label>
+    </div>
+
+    <input type="submit" value="Apply" name="action4"/>
+    <input type="submit" value="Get Info" name="action5"/>
+    <input type="submit" value="Reset" name="action6"/>
+
+    <div>
+        <h3>Output</h3> 
+        <input type="submit" value="Clear" name="action7"/>
+        </br>
+        <textarea class="scrollabletextbox" id="console" name="console" rows="20" cols="50" disabled autofocus>{% for c in console %}
+{{ c }}{% endfor %}</textarea>
+    </div>
+
+</form>
+
+<!-- Javascript-->
+<script>
+
+    // auto scroll to bottom of console log
+    var textarea = document.getElementById('console');
+    textarea.scrollTop = textarea.scrollHeight;
+    
+    // Dynamically load channel and band dropdowns 
+    function loadcat (level) {
+
+        var data = new FormData();
+        data.append("id", (level==1 ? 0 : document.getElementById("cat1").value));
+
+    
+        fetch("/getcat", { method: "POST", body: data })
+        .then(res => res.json())
+        .then(cat => {
+            let selector = document.getElementById("cat" + level);
+            selector.innerHTML = "";
+            for (let c of cat) {
+            let opt = document.createElement("option");
+            opt.value = c.id;
+            opt.innerHTML = c.name;
+            if (c.selected == "true") {opt.selected = c.id;}
+            selector.appendChild(opt);
+        }
+
+            if (level==1) { loadcat(2); }
+        });
+    }
+
+    window.onload = () => loadcat(1);
+</script>
